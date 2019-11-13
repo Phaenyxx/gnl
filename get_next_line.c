@@ -6,7 +6,7 @@
 /*   By: trifflet <trifflet@student.le-101.fr>      +:+   +:    +:    +:+     */
 /*                                                 #+#   #+    #+    #+#      */
 /*   Created: 2019/11/04 19:13:42 by trifflet     #+#   ##    ##    #+#       */
-/*   Updated: 2019/11/06 14:52:36 by trifflet    ###    #+. /#+    ###.fr     */
+/*   Updated: 2019/11/13 14:31:51 by trifflet    ###    #+. /#+    ###.fr     */
 /*                                                         /                  */
 /*                                                        /                   */
 /* ************************************************************************** */
@@ -114,7 +114,7 @@ int		get_next_line(int fd, char **line)
 	*line = rdline;
 	if (info[fd]->state == FILE_END)
 	{
-		if(!rdline[0])
+		if (!rdline[0])
 			free(info[fd]);
 		return (0);
 	}
