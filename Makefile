@@ -6,7 +6,7 @@
 #    By: trifflet <trifflet@student.le-101.fr>      +:+   +:    +:    +:+      #
 #                                                  #+#   #+    #+    #+#       #
 #    Created: 2019/10/07 12:41:36 by trifflet     #+#   ##    ##    #+#        #
-#    Updated: 2019/11/13 15:11:06 by trifflet    ###    #+. /#+    ###.fr      #
+#    Updated: 2019/11/23 17:18:46 by trifflet    ###    #+. /#+    ###.fr      #
 #                                                          /                   #
 #                                                         /                    #
 # **************************************************************************** #
@@ -22,15 +22,15 @@ SRC			=	get_next_line.c			\
 OBJ			=	${SRC:.c=.o}
 
 FLAGS		=	-Wall -Wextra -Werror -g
-DFLAGS		=	-D BUFFER_SIZE=64
+DFLAGS		=	-D BUFFER_SIZE=90
 
 %.o: %.c $(HEADER)
-			gcc $(FLAGS) $(DFLAGS) -c $< -o ${<:.c=.o}
+			gcc -g $(FLAGS) $(DFLAGS) -c $< -o ${<:.c=.o}
 
 all:    	$(NAME)
 
 $(NAME):	$(OBJ)
-			gcc $(FLAGS) $(DFLAGS) -o $(NAME) $(OBJ)
+			gcc -g $(FLAGS) $(DFLAGS) -o $(NAME) $(OBJ)
 
 clean:
 			rm -rf $(OBJ) $(OBJ_BONUS)
