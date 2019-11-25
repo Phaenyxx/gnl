@@ -6,7 +6,7 @@
 /*   By: trifflet <trifflet@student.le-101.fr>      +:+   +:    +:    +:+     */
 /*                                                 #+#   #+    #+    #+#      */
 /*   Created: 2019/11/04 19:13:42 by trifflet     #+#   ##    ##    #+#       */
-/*   Updated: 2019/11/13 14:31:51 by trifflet    ###    #+. /#+    ###.fr     */
+/*   Updated: 2019/11/25 13:27:47 by trifflet    ###    #+. /#+    ###.fr     */
 /*                                                         /                  */
 /*                                                        /                   */
 /* ************************************************************************** */
@@ -54,8 +54,6 @@ char	*rest(char *str)
 	i = 0;
 	while (*str++ != '\n' && *str)
 		;
-	if (!*str)
-		return (NULL);
 	if (!(st = ft_calloc(BUFFER_SIZE, sizeof(char))))
 		return (NULL);
 	while (*str)
@@ -89,34 +87,34 @@ char	*read_and_split(int fd, t_info *info)
 		save(buf, info);
 	if (!buf)
 		info->state = check(ret);
-	ret = fusion(ret, buf);
-	return (ret);
+	return (fusion(ret, buf));
 }
 
 int		get_next_line(int fd, char **line)
 {
+	int				keep;
 	char			*rdline;
 	static t_info	*info[4096];
 
-	if (fd < 0 || fd > 4096 || read(fd, 0, 0) < 0)
+	if (read(fd, 0, 0) < 0 || BUFFER_SIZE < 1)
 		return (-1);
-	rdline = NULL;
-	if (!info[fd])
+	if (!(rdline = NULL) && !info[fd])
 	{
 		if (!(info[fd] = ft_calloc(1, sizeof(t_info))))
 			return (ERROR);
 		info[fd]->state = NO_NL;
 		info[fd]->stocks = NULL;
 	}
-	rdline = read_and_split(fd, info[fd]);
+	rdline = fusion(rdline, read_and_split(fd, info[fd]));
 	while (info[fd]->state == NO_NL)
 		rdline = fusion(rdline, read_and_split(fd, info[fd]));
 	*line = rdline;
-	if (info[fd]->state == FILE_END)
+	if (!(keep = info[fd]->state - FILE_END) && info[fd]->stocks)
 	{
-		if (!rdline[0])
-			free(info[fd]);
-		return (0);
+		free(info[fd]);
+		info[fd] = NULL;
 	}
-	return (1);
+	else if (!keep)
+		*line = NULL;
+	return (keep ? 1 : 0);
 }
