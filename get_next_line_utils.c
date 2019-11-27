@@ -6,16 +6,17 @@
 /*   By: trifflet <trifflet@student.le-101.fr>      +:+   +:    +:    +:+     */
 /*                                                 #+#   #+    #+    #+#      */
 /*   Created: 2019/10/21 16:34:43 by trifflet     #+#   ##    ##    #+#       */
-/*   Updated: 2019/11/13 18:43:14 by trifflet    ###    #+. /#+    ###.fr     */
+/*   Updated: 2019/11/26 17:48:41 by trifflet    ###    #+. /#+    ###.fr     */
 /*                                                         /                  */
 /*                                                        /                   */
 /* ************************************************************************** */
 
 #include <stdlib.h>
+#include "get_next_line.h"
 
-size_t	ft_strnllen(const char *str)
+size_t	ft_strclen(const char *str, char c)
 {
-	return ((*str && *str != '\n') ? 1 + ft_strnllen(str + 1) : 0);
+	return ((*str && *str != c) ? 1 + ft_strclen(str + 1, c) : 0);
 }
 
 void	*ft_calloc(size_t count, size_t size)
@@ -28,7 +29,7 @@ void	*ft_calloc(size_t count, size_t size)
 		return (NULL);
 	meh = (unsigned char *)mem;
 	i = 0;
-	while (i < size * count)
+	while (i < size * count && BUFFER_SIZE < 100000000)
 		meh[i++] = 0;
 	return (mem);
 }
@@ -58,9 +59,9 @@ char	*ft_strnldup(char *s1)
 	char	*cpy;
 
 	i = 0;
-	if (!(cpy = ft_calloc(ft_strnllen(s1) + 1, sizeof(char))))
+	if (!(cpy = ft_calloc(ft_strclen(s1, '\n') + 1, sizeof(char))))
 		return (NULL);
-	while (i < ft_strnllen(s1))
+	while (i < ft_strclen(s1, '\n'))
 	{
 		cpy[i] = s1[i];
 		i++;
@@ -72,7 +73,9 @@ char	*ft_strnldup(char *s1)
 
 char	*fusion(char *str, char *to_add)
 {
-	char *st;
+	char	*st;
+	size_t	slen;
+	size_t	tlen;
 
 	st = NULL;
 	if (!str && !to_add)
@@ -84,12 +87,13 @@ char	*fusion(char *str, char *to_add)
 		return (ft_strnldup(to_add));
 	if (!to_add)
 		return (ft_strnldup(str));
-	if (!(st = ft_calloc((ft_strnllen(str) + ft_strnllen(to_add)) + 1,\
-		sizeof(char))))
+	slen = ft_strclen(str, '\n');
+	tlen = ft_strclen(to_add, '\n');
+	if (!(st = ft_calloc(slen + tlen + 1, sizeof(char))))
 		return (NULL);
-	ft_memcpy(st, str, ft_strnllen(str));
-	ft_memcpy(st + ft_strnllen(str), to_add, ft_strnllen(to_add));
-	*(st + ft_strnllen(str) + ft_strnllen(to_add)) = '\0';
+	ft_memcpy(st, str, slen);
+	ft_memcpy(st + slen, to_add, tlen);
+	*(st + slen + tlen) = '\0';
 	free(to_add);
 	free(str);
 	return (st);
