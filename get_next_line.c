@@ -6,7 +6,7 @@
 /*   By: trifflet <trifflet@student.le-101.fr>      +:+   +:    +:    +:+     */
 /*                                                 #+#   #+    #+    #+#      */
 /*   Created: 2019/11/04 19:13:42 by trifflet     #+#   ##    ##    #+#       */
-/*   Updated: 2019/11/25 13:27:47 by trifflet    ###    #+. /#+    ###.fr     */
+/*   Updated: 2019/11/26 17:53:55 by trifflet    ###    #+. /#+    ###.fr     */
 /*                                                         /                  */
 /*                                                        /                   */
 /* ************************************************************************** */
@@ -36,25 +36,24 @@ void	save(char *str, t_info *info)
 	i = 0;
 	while (*str++ != '\n')
 		;
-	if (!(info->stocks = ft_calloc(BUFFER_SIZE, sizeof(char))))
-	{
-		info->state = ERROR;
+	if (!(info->rest = ft_calloc(BUFFER_SIZE, sizeof(char))))
 		return ;
-	}
 	while (*str)
-		info->stocks[i++] = *str++;
-	info->stocks[i] = '\0';
+		info->rest[i++] = *str++;
+	info->rest[i] = '\0';
 }
 
-char	*rest(char *str)
+char	*get_rest(char *str)
 {
 	char	*st;
 	int		i;
 
 	i = 0;
-	while (*str++ != '\n' && *str)
+	while (*str && *str++ != '\n')
 		;
-	if (!(st = ft_calloc(BUFFER_SIZE, sizeof(char))))
+	if (!*str)
+		return (NULL);
+	if (!(st = ft_calloc(ft_strclen(str, '\0') + 1, sizeof(char))))
 		return (NULL);
 	while (*str)
 		st[i++] = *str++;
@@ -69,10 +68,10 @@ char	*read_and_split(int fd, t_info *info)
 
 	ret = NULL;
 	buf = NULL;
-	if (info->stocks)
+	if (info->rest)
 	{
-		ret = info->stocks;
-		info->stocks = rest(info->stocks);
+		ret = info->rest;
+		info->rest = get_rest(info->rest);
 		info->state = check(ret);
 	}
 	if (info->state == NO_NL || info->state == FILE_END)
@@ -92,29 +91,13 @@ char	*read_and_split(int fd, t_info *info)
 
 int		get_next_line(int fd, char **line)
 {
-	int				keep;
-	char			*rdline;
-	static t_info	*info[4096];
+	static t_info	info[4096];
 
+	*line = NULL;
 	if (read(fd, 0, 0) < 0 || BUFFER_SIZE < 1)
 		return (-1);
-	if (!(rdline = NULL) && !info[fd])
-	{
-		if (!(info[fd] = ft_calloc(1, sizeof(t_info))))
-			return (ERROR);
-		info[fd]->state = NO_NL;
-		info[fd]->stocks = NULL;
-	}
-	rdline = fusion(rdline, read_and_split(fd, info[fd]));
-	while (info[fd]->state == NO_NL)
-		rdline = fusion(rdline, read_and_split(fd, info[fd]));
-	*line = rdline;
-	if (!(keep = info[fd]->state - FILE_END) && info[fd]->stocks)
-	{
-		free(info[fd]);
-		info[fd] = NULL;
-	}
-	else if (!keep)
-		*line = NULL;
-	return (keep ? 1 : 0);
+	info[fd].state = NO_NL;
+	while (info[fd].state == NO_NL)
+		*line = fusion(*line, read_and_split(fd, &info[fd]));
+	return (info[fd].state == FILE_END ? 0 : 1);
 }

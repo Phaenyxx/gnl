@@ -6,7 +6,7 @@
 #    By: trifflet <trifflet@student.le-101.fr>      +:+   +:    +:    +:+      #
 #                                                  #+#   #+    #+    #+#       #
 #    Created: 2019/10/07 12:41:36 by trifflet     #+#   ##    ##    #+#        #
-#    Updated: 2019/11/25 18:18:55 by trifflet    ###    #+. /#+    ###.fr      #
+#    Updated: 2019/11/26 14:12:28 by trifflet    ###    #+. /#+    ###.fr      #
 #                                                          /                   #
 #                                                         /                    #
 # **************************************************************************** #
@@ -36,6 +36,6 @@ clean:
 			rm -rf $(OBJ) $(OBJ_BONUS)
 
 fclean: 	clean
-			rm -rf $(NAME)
+			rm -rf $(NAME) *.dSYM
 
 re:			fclean all
