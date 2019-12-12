@@ -6,15 +6,12 @@
 /*   By: trifflet <trifflet@student.le-101.fr>      +:+   +:    +:    +:+     */
 /*                                                 #+#   #+    #+    #+#      */
 /*   Created: 2019/11/04 19:13:42 by trifflet     #+#   ##    ##    #+#       */
-/*   Updated: 2019/12/12 18:27:59 by trifflet    ###    #+. /#+    ###.fr     */
+/*   Updated: 2019/12/12 20:00:58 by trifflet    ###    #+. /#+    ###.fr     */
 /*                                                         /                  */
 /*                                                        /                   */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
-#include <stdio.h>
-#define GRY "\033[0;90m"
-#define RST "\033[0m"
 
 void	reposition(t_info *info, int i)
 {
@@ -86,7 +83,7 @@ int		add(int fd, char **line, t_info *info)
 	char *buffer;
 
 	info->state = wrap_read(fd, &buffer);
-	if (info->state ==ERROR)
+	if (info->state == ERROR)
 		return (ERROR);
 	if (ft_strclen(buffer, '\n') != ft_strclen(buffer, '\0'))
 	{
