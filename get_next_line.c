@@ -6,98 +6,116 @@
 /*   By: trifflet <trifflet@student.le-101.fr>      +:+   +:    +:    +:+     */
 /*                                                 #+#   #+    #+    #+#      */
 /*   Created: 2019/11/04 19:13:42 by trifflet     #+#   ##    ##    #+#       */
-/*   Updated: 2019/11/26 17:53:55 by trifflet    ###    #+. /#+    ###.fr     */
+/*   Updated: 2019/12/12 20:00:58 by trifflet    ###    #+. /#+    ###.fr     */
 /*                                                         /                  */
 /*                                                        /                   */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
-#include <stdio.h>
 
-int		check(char *str)
+void	reposition(t_info *info, int i)
 {
-	int i;
+	int	j;
 
-	i = 0;
-	if (!str)
-		return (NO_NL);
-	while (str[i])
-		if (str[i++] == '\n')
-			return (FOUND_NL);
-	if (i != 0)
-		return (NO_NL);
-	return (FILE_END);
+	j = 0;
+	if (info->rest[i] == '\n')
+	{
+		info->state = LINE_READ;
+		i++;
+	}
+	if (info->rest[i])
+	{
+		while (info->rest[i])
+			info->rest[j++] = info->rest[i++];
+		info->rest[j] = '\0';
+		info->state = LINE_READ;
+	}
+	else
+	{
+		free(info->rest);
+		info->rest = NULL;
+	}
 }
 
-void	save(char *str, t_info *info)
+int		retrieve(char **line, t_info *info)
 {
 	int i;
+	int j;
 
 	i = 0;
-	while (*str++ != '\n')
-		;
-	if (!(info->rest = ft_calloc(BUFFER_SIZE, sizeof(char))))
-		return ;
-	while (*str)
-		info->rest[i++] = *str++;
-	info->rest[i] = '\0';
+	j = 0;
+	if (!info->rest)
+		*line = (char *)malloc(sizeof(char));
+	else
+	{
+		if (!(*line = malloc(1 + ft_strclen(info->rest, '\n') * sizeof(char))))
+			return (ERROR);
+		while (info->rest[i] && info->rest[i] != '\n')
+			(*line)[j++] = info->rest[i++];
+		(*line)[j] = '\0';
+		reposition(info, i);
+	}
+	(*line)[j] = '\0';
+	return (info->state == LINE_READ ? LINE_READ : NO_EOL);
 }
 
 char	*get_rest(char *str)
 {
-	char	*st;
+	char	*returned;
 	int		i;
 
-	i = 0;
-	while (*str && *str++ != '\n')
+	while (*str++ != '\n')
 		;
-	if (!*str)
+	i = 0;
+	if (!(returned = malloc(1 + ft_strclen(str, '\0') * sizeof(char))))
 		return (NULL);
-	if (!(st = ft_calloc(ft_strclen(str, '\0') + 1, sizeof(char))))
-		return (NULL);
-	while (*str)
-		st[i++] = *str++;
-	st[i] = '\0';
-	return (st);
+	while (str[i])
+	{
+		returned[i] = str[i];
+		i++;
+	}
+	returned[i] = '\0';
+	return (returned);
 }
 
-char	*read_and_split(int fd, t_info *info)
+int		add(int fd, char **line, t_info *info)
 {
-	char *ret;
-	char *buf;
+	char *buffer;
 
-	ret = NULL;
-	buf = NULL;
-	if (info->rest)
+	info->state = wrap_read(fd, &buffer);
+	if (info->state == ERROR)
+		return (ERROR);
+	if (ft_strclen(buffer, '\n') != ft_strclen(buffer, '\0'))
 	{
-		ret = info->rest;
-		info->rest = get_rest(info->rest);
-		info->state = check(ret);
+		if (!(info->rest = get_rest(buffer)))
+		{
+			free(buffer);
+			return (ERROR);
+		}
+		info->state = LINE_READ;
 	}
-	if (info->state == NO_NL || info->state == FILE_END)
+	assemble(line, buffer);
+	if (!*line)
 	{
-		if (!(buf = ft_calloc(BUFFER_SIZE + 1, sizeof(char))))
-			return (NULL);
-		buf[BUFFER_SIZE] = '\0';
-		read(fd, buf, BUFFER_SIZE);
+		*line = malloc(sizeof(char));
+		return (ERROR);
 	}
-	info->state = check(buf);
-	if (info->state == FOUND_NL)
-		save(buf, info);
-	if (!buf)
-		info->state = check(ret);
-	return (fusion(ret, buf));
+	free(buffer);
+	return (info->state);
 }
 
 int		get_next_line(int fd, char **line)
 {
-	static t_info	info[4096];
+	static t_info	info[FD_SETSIZE];
 
-	*line = NULL;
-	if (read(fd, 0, 0) < 0 || BUFFER_SIZE < 1)
-		return (-1);
-	info[fd].state = NO_NL;
-	while (info[fd].state == NO_NL)
-		*line = fusion(*line, read_and_split(fd, &info[fd]));
-	return (info[fd].state == FILE_END ? 0 : 1);
+	if (read(fd, 0, 0) < 0 || BUFFER_SIZE < 1 || !line)
+	{
+		*line = malloc(sizeof(char));
+		return (ERROR);
+	}
+	info[fd].state = NO_EOL;
+	info[fd].state = retrieve(line, &info[fd]);
+	while (info[fd].state == NO_EOL)
+		info[fd].state = add(fd, line, &info[fd]);
+	return (info[fd].state);
 }
